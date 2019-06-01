@@ -19,5 +19,32 @@ x_train <- read.table("UCI HAR Dataset/train/X_train.txt", col.names = features$
 y_train <- read.table("UCI HAR Dataset/train/y_train.txt", col.names = "code")
 
 X <- rbind(x_train, x_test);
-Y <- rbind(y_train, y_test)
+Y <- rbind(y_train, y_test);
+
+Subject <- rbind(subject_test, subject_train);
+
+Merged_Dataset <- cbind(Subject, Y, X);
+extractMeanSD <- Merged_Dataset %>% select(Subject, code, contains("mean"), contains("std"));
+
+extractMeanSD$code <- activities[extractMeanSD$code, 2];
+
+names(extractMeanSD)<-gsub("-mean()", "Mean", names(extractMeanSD), ignore.case = TRUE);
+names(extractMeanSD)<-gsub("-std()", "STD", names(extractMeanSD), ignore.case = TRUE);
+names(extractMeanSD)<-gsub("-freq()", "Frequency", names(extractMeanSD), ignore.case = TRUE);
+names(extractMeanSD)<-gsub("angle", "Angle", names(extractMeanSD));
+names(extractMeanSD)<-gsub("gravity", "Gravity", names(extractMeanSD));
+
+names(extractMeanSD)<-gsub("Acc", "Accelerometer", names(extractMeanSD));
+names(extractMeanSD)<-gsub("Gyro", "Gyroscope", names(extractMeanSD));
+names(extractMeanSD)<-gsub("BodyBody", "Body", names(extractMeanSD));
+names(extractMeanSD)<-gsub("Mag", "Magnitude", names(extractMeanSD));
+names(extractMeanSD)<-gsub("^t", "Time", names(extractMeanSD));
+names(extractMeanSD)<-gsub("^f", "Frequency", names(extractMeanSD));
+names(extractMeanSD)<-gsub("tBody", "TimeBody", names(extractMeanSD));
+names(extractMeanSD)[2] = "activity";
+
+FinalData <- extractMeanSD %>%
+  group_by(subject, activity) %>%
+  summarise_all(funs(mean))
+write.table(FinalData, "FinalData.txt", row.name=FALSE)
 
